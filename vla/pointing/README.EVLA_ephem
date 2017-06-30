@@ -1,0 +1,28 @@
+
+; to make EVLA files:
+
+- run JPL Horizons to get topocentric coords with target=Sun, observer=VLA=-5, 
+  quantities 1,10, double precision, output plain text, eg
+Ephemeris Type [change] :  	OBSERVER
+Target Body [change] :  	Sun [Sol] [10]
+Observer Location [change] :  	VLA [-5] ( 252°22'56.3''E, 34°04'43.3''N, 2112.30 m )
+Time Span [change] :  	Start=2012-MAY-20 23:00, Stop=2012-MAY-21 02:00, Step=1 m
+Table Settings [change] :  	QUANTITIES=1,20; refraction model=REFRACTED;
+extra precision=YES; object page=NO
+Display/Output [change] :  	plain text
+
+- then generate offset files with  eg
+
+IDL> generate_fields,'horizons_sun_may8.radec','N10E40','18:00:00',ar1 
+
+to create RA, dec for target at N10E40 at ref time 18:00:00: set /notrack
+if you don't want to track for solar rotation (eg, limb tracking)
+
+- then plot the generated fields relative to the Sun center coords with RA,
+  dec axes using
+
+IDL> plot_fields,'horizons_sun_may8.radec','S19W46_120508.radec',3.0,pang=-22.46
+
+where you give the file for sun center, the file for the offset position,
+reference frequency (in GHz) so it gets the primary beam size and
+(optionally) the P angle so it can plot the solar rotation axis.

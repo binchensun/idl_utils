@@ -1,0 +1,230 @@
+<html>
+<head>
+<title>Buie IDL v8.2 Library changes</title>
+</head>
+<body>
+<h1>Changes to 
+<a href="idl.html">Buie IDL v8.2 Library</a></h1>
+<p>This is a reverse chronological list of changes to all
+library routines since the switch-over from the previous
+version of IDL.</p>
+<p>
+<a href="pro/astcol.html">
+astcol</a>: 
+2013/09/16, MWB, added ALLTNO keyword
+</p>
+<p>
+<a href="pro/mysvdfit.html">
+mysvdfit</a>: 
+2013/09/14, AMZ, fixed a bug for using default polynomials.
+</p>
+<p>
+<a href="pro/cloneast.html">
+cloneast</a>: 
+2013/09/03, MWB, added DIGITS, NOSAVE, and RANGE keywords, further mods
+for even newer rd/wrastfc
+</p>
+<p>
+<a href="pro/newanom.html">
+newanom</a>: 
+2013/08/16, MWB, modified to allow the same variable to be given for
+input and output mean anomaly
+</p>
+<p>
+<a href="pro/kepler1.html">
+kepler1</a>: 
+2013/08/16, MWB, fixed error with parameter validation
+</p>
+<p>
+<a href="pro/elem2xyz.html">
+elem2xyz</a>: 
+2013/08/16, MWB, improve options for mixing and matching vector and
+scalar inputs.
+</p>
+<p>
+<a href="pro/smplprb.html">
+smplprb</a>: 
+2013/08/14, MWB, slight algorithmic improvements, on average the results
+are nearly the same but the sampling is slightly more
+robust and cleaner now.  Also added the DEBUG and RANDOMIZE keyword.
+</p>
+<p>
+<a href="pro/parsekey.html">
+parsekey</a>: 
+2013/08/05, MWB, added fix to allow getting time from DATE-OBS keyword
+</p>
+<p>
+<a href="pro/basphote.html">
+basphote</a>: 
+2013/07/29, MWB, fixed a bug for normal FWHM calculation introduced when RADP
+option was added.
+</p>
+<p>
+<a href="pro/psffit.html">
+psffit</a>: 
+2013/07/12, MWB, added FWHM and PSF_FWHM output keywords
+</p>
+<p>
+<a href="pro/seeing.html">
+seeing</a>: 
+2013/07/06, MWB, added RADP keyword option
+</p>
+<p>
+<a href="pro/basphote.html">
+basphote</a>: 
+2013/07/06, MWB, added RADP keyword option
+</p>
+<p>
+<a href="pro/inst2std.html">
+inst2std</a>: 
+2013/06/25, MWB, added REFCOLOR keyword
+</p>
+<p>
+<a href="pro/colorsol.html">
+colorsol</a>: 
+2013/06/25, MWB, added REFCOLOR keyword
+</p>
+<p>
+<a href="pro/psffit.html">
+psffit</a>: 
+2013/06/19, MWB, removed PSFTHRES keyword.  Added PSFFACTOR plus numerous
+improvements including better starting values. CSTART keyword was added.
+</p>
+<p>
+<a href="pro/colorsol.html">
+colorsol</a>: 
+2013/06/18, MWB, added RA, DEC keywords
+</p>
+<p>
+<a href="pro/platlon.html">
+platlon</a>: 
+2013/06/06 - MWB, added elong output.
+</p>
+<p>
+<a href="pro/inst2std.html">
+inst2std</a>: 
+2013/06/02, MWB, allow option for data to be covered by different
+transformation coefficients.
+</p>
+<p>
+<a href="pro/colorsol.html">
+colorsol</a>: 
+2013/06/02, MWB, updated to support different transformation coefficients
+for the input data.
+</p>
+<p>
+<a href="pro/psffit.html">
+psffit</a>: 
+2013/04/14, MWB, tweak sigma array to avoid negative flux values
+</p>
+<p>
+<a href="pro/skysclim.html">
+skysclim</a>: 
+2013/03/29, MWB, added STDMEAN output keyword
+</p>
+<p>
+<a href="pro/psffit.html">
+psffit</a>: 
+2013/03/29, BLE, Added new input keywords EXPTIME, SKY1, and SKY2.
+Calculate and output new keywords FLUX, FLERR, MAG, ERR.
+The PSFTHRES input keyword was also added.
+</p>
+<p>
+<a href="pro/mosplot.html">
+mosplot</a>: 
+2013/03/25, MWB, changed to support longer suffix values
+</p>
+<p>
+<a href="pro/moscal.html">
+moscal</a>: 
+2013/03/22, MWB, added FLOAT keyword
+</p>
+<p>
+<a href="pro/astrom.html">
+astrom</a>: 
+2013/03/22, MWB, added DIGITS keyword, also changed default location
+of src files to be outdir+'Src/'.  Fixed a nasty
+bug that had broken TWOSTAR solutions.
+</p>
+<p>
+<a href="pro/mmaspli.html">
+mmaspli</a>: 
+2013/03/13, MWB, added LEFT and RIGHT keywords
+</p>
+<p>
+<a href="pro/mkcircle.html">
+mkcircle</a>: 
+<font color="#d822c6">
+Written by Marc W. Buie, Southwest Research Institute, 2013/03/06
+</font>
+</p>
+<p>
+<a href="pro/ephem.html">
+ephem</a>: 
+2013/03/06, MWB, changed to allow one input time and multiple objects
+</p>
+<p>
+<a href="pro/psffit.html">
+psffit</a>: 
+2013/03/05, MWB, added NMAX keyword and proper trap of bad fit from amoeba
+</p>
+<p>
+<a href="pro/mon2num.html">
+mon2num</a>: 
+2013/02/20, MWB, add trimrank call at the end, one element vector will
+now be returned as a scalar
+</p>
+<p>
+<a href="pro/sspos.html">
+sspos</a>: 
+2013/02/15, MWB, added DT keyword and made some cosmetic changes
+</p>
+<p>
+<a href="pro/astrom.html">
+astrom</a>: 
+2012/12/20, MWB, added FORCEVAL keyword
+</p>
+<p>
+<a href="pro/stacker.html">
+stacker</a>: 
+2012/12/16, MWB, added NTOPCLIP keyword
+</p>
+<p>
+<a href="pro/elem2xyz.html">
+elem2xyz</a>: 
+2012/12/09, MWB, changed calling sequence to require time and now allow
+vector input on jdpos.
+</p>
+<p>
+<a href="pro/stageselect.html">
+stageselect</a>: 
+2012/12/06, MWB, added nstars return and some cosmetic cleanup
+</p>
+<p>
+<a href="pro/psffit.html">
+psffit</a>: 
+2012/12/06, MWB, fixed a problem with the MEANSKY and CALCSKY keywords
+</p>
+<p>
+<a href="pro/frmdxyr.html">
+frmdxyr</a>: 
+2012/12/03, MWB, added pass-through support for SCALEFAC
+</p>
+<p>
+<a href="pro/frmdxdy.html">
+frmdxdy</a>: 
+2012/12/03, MWB, error code 3 never returned, fixed. Added SCALEFAC keyword
+</p>
+<p>
+<a href="pro/astrom.html">
+astrom</a>: 
+2012/12/03, MWB, Fixed a subtle error in the shells reduction where it
+could quit prematurely with a low-density field.
+Added SCALEFAC keyword support for new frmdxdy
+</p>
+<hr>
+<address>
+Created by modupdate.pro 2013/09/18 13:25:32 MST
+</address>
+</body>
+</html>

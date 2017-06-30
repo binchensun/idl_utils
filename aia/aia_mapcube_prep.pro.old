@@ -1,0 +1,87 @@
+pro aia_mapcube_prep,aiafits_path,savefile,cadence=cadence,waves=waves,$
+    timerange=timerange,xrange=xrange,yrange=yrange,cutout=cutout
+;aiafits_path: path to the multi-wave aia fits files
+;savefile: name of the IDL sav file
+;cadence: output fits cadence
+;waves: aia bands to combine, each will produce one map cube
+;timerange: timerange of the map cube
+;xrange: xrange of the maps, if omitted, then no cut is applied
+;yrange: yrange of the maps, if omitted, then no cut is applied
+if ~keyword_set(waves) then begin
+    print,'no aia band is specified, abort..'
+    return
+endif
+nwave=n_elements(waves)
+aiaflists=strarr(10000,nwave)
+aiaftims=dblarr(2000,nwave)
+;get filenames and times
+if keyword_set(cutout) then begin
+    for w=0,nwave-1 do begin
+        wave=waves[w]
+        aiaflist=file_search(aiafits_path,'*_AIA_'+wave+'_.fts',count=cnt)
+        aiaftim=dblarr(cnt)
+        for m=0,cnt-1 do begin
+            f=aiaflist[m]
+            plen=strlen(aiafits_path)
+            aiaftim[m]=anytim(strmid(f,plen+11,4)+'-'+strmid(f,plen+15,2)+'-'+strmid(f,plen+17,2)+'T'+$
+                              strmid(f,plen+20,2)+':'+strmid(f,plen+22,2)+':'+strmid(f,plen+24,2))
+        endfor
+        aiaflists[0:cnt-1,w]=aiaflist
+        aiaftims[0:cnt-1,w]=aiaftim
+    endfor
+endif else begin
+    for w=0,nwave-1 do begin
+        wave=waves[w]
+        aiaflist=file_search(aiafits_path,'AIA*'+wave+'.fits',count=cnt)
+        aiaftim=dblarr(cnt)
+        for m=0,cnt-1 do begin
+            f=aiaflist[m]
+            p=strpos(f,'.fits')
+            aiaftim[m]=anytim(strmid(f,p-20,4)+'-'+strmid(f,p-16,2)+'-'+strmid(f,p-14,2)+'T'+$
+                              strmid(f,p-11,2)+':'+strmid(f,p-9,2)+':'+strmid(f,p-7,2))
+        endfor
+        aiaflists[0:cnt-1,w]=aiaflist
+        aiaftims[0:cnt-1,w]=aiaftim
+    endfor
+endelse
+    
+;setup time frames
+if keyword_set(timerange) then begin
+    tbegin=anytim(timerange[0])
+    tend=anytim(timerange[1])
+endif else begin
+    tbegin=aiaftim[0]
+    tend=aiaftim[-1]
+endelse
+if ~keyword_set(cadence) then cadence=12.
+ntim=(tend-tbegin)/cadence+1
+print, string(ntim,format='(I4)')+' images to combine...'
+tims=dindgen(ntim)*cadence+tbegin
+;prepare AIA images
+savstr='save,file=savefile'
+for w=0,nwave-1 do begin
+    wave=waves[w]
+    print,'Processing AIA wave: ',wave
+    for i=0,ntim-1 do begin
+        tim=tims[i]
+        if i mod 10 eq 0 then print, 'Processed ',i, ' times'
+        dt=min(aiaftims[*,w]-tim,tind,/absolute)
+        aiafile=aiaflists[tind,w]
+;        print,'tim: ',anytim(tim,/vms)
+;        print,'tind: ',tind
+;        print,'aiafile: ',aiafile
+        if keyword_set(cutout) then aia_prep,aiafile,-1,index,data,/cutout $ 
+            else aia_prep,aiafile,-1,index,data
+        index2map,index,data,map
+        if keyword_set(xrange) or keyword_set(yrange) then $
+            sub_map,map,aiamap,xrange=xrange,yrange=yrange $
+            else aiamap=temporary(map)
+        if (i eq 0) then aiamaps=replicate(aiamap,ntim) else aiamaps[i]=aiamap
+    endfor
+    ok=execute('aiamaps_'+wave+'=temporary(aiamaps)')
+    savstr=savstr+',aiamaps_'+wave
+endfor
+if keyword_set(xrange) and keyword_set(yrange) then $
+    ok=execute(savstr+',cadence,waves,timerange,xrange,yrange') $
+else ok=execute(savstr+',cadence,waves,timerange')
+end

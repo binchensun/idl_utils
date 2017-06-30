@@ -1,0 +1,81 @@
+#!/bin/csh
+
+set argv=`getopt v:p:h:q: $*`
+
+#set opt_p_cand = ('koshix17' 'hanaoka17' 'hanaoka34' 'fujiki17')
+
+set prog = hanaoka17
+set ver = ''
+
+while ( $#argv )
+  switch ($argv[1])
+    case -v:
+      shift
+      set ver = _$argv[1]
+    breaksw
+    case -p:
+      shift
+      set prog = $argv[1]
+    breaksw
+    case -h:
+      shift
+      set host = $argv[1]
+    breaksw
+    case -q:
+      shift
+      set jobclass = $argv[1]
+    breaksw
+    case --:
+      shift
+      break
+    breaksw
+  endsw
+  shift
+end
+
+if ( $#argv == 0 ) cat <<END 
+Usage: norh_synth [-p prog] [input1 input2 ...]
+  -p[prog]   specify synthesis program 
+     ( hanaoka17,hanaoka34,koshix17,fujiki17 : default is hanaoka17)
+  -h[host]   specify host to run the program
+  -q[class]  specify job class if using NQS
+  -v[version]  specify version of synthesis program
+END
+
+
+if ($?host) then
+  set remote = "rsh $host"
+else
+  set remote = ''
+endif
+
+  set pwd=`pwd`;
+  if ($?jobclass) then
+
+    foreach file ($argv)
+      set base=`basename $file`;
+#     cat <<EOF  
+      cat <<EOF  | $remote qsub
+#!/bin/csh
+#PBS -q $jobclass
+#PBS -N $base
+#PBS -j o
+#PBS -o ${pwd}/stdout_$base
+
+    $prog$ver << EOP
+`cat $file`
+EOP
+EOF
+    end  # foreach
+
+  else # if jobclass
+    foreach file ($argv)
+      if ($?host) then
+#       $remote "(cd $pwd; $prog$ver < $file)"
+        $remote $prog$ver < $file
+      else
+        $prog$ver < $file
+      endif
+    end
+  endif
+

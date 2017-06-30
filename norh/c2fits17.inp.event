@@ -1,0 +1,39 @@
+Inputs file for C2FITS17
+------------------------------------------------------------------
+Data file path and prefix     : /share/norh/raw/event/2001/03/20/se17010320111217
+Ephemeris file path and name  : /share/norh/raw/steady/2001/03/20/sz00010320001
+Frame info file path and name : /share/norh/raw/event/2001/03/20/info
+Phase diff file path and name : /share/norh/data/rlphdif/sun0706_2rlphdif
+Output file path and name     : /home/white/caldata/010320_17_021217_ev_
+Start time                    :     -1
+End time                      :    600
+UT or JST?                    : JST
+Image Averging time           :   0
+Image Increment               :   1 
+Smoothing Time (sec)          :   1
+Bypass Amplitude Calibration? :  NO
+Fixed Calibration Interval?   :  NO 
+Start time of interval        : 143400
+End time of interval          : 143404
+Dump calibration solutions?   :  NO
+Skip output of FITS files?    :  NO
+------------------------------------------------------------------
+
+Note 1: The meaning of bypassing the amplitude calibration is that
+        instead of computing the amplitude of the complex gains
+        explicitly, the value 1.0 is used for all antennas. If the
+        amplitude calibration is bypassed the amplitude smoothing
+        time is ignored.
+
+Note 2: If a fixed calibration interval is used, the smoothing time
+        is ignored. It is assumed that the time standard for the 
+        fixed calibration interval is the same as that of the data 
+        interval.
+
+Note 3: The phase diff file is no longer used
+
+Note 4: If the START TIME is negative, all times are interpreted as 
+        frame numbers, not times, for use with event data.
+        There is an upper limit of 600 output frames per run.
+
+Note 5: Set image averaging time to 1 or 0 for no averaging.
