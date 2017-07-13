@@ -1,8 +1,8 @@
-pro aia_make_mapcube,date,timerange,wave=wave,$
+pro aia_make_mapcube,timerange,wave=wave,$
     data_area=data_area,dataset=dataset,fits_dir=fits_dir,$
     dt_frm=dt_frm, dt_data=dt_data, savfile=savfile,$
-    average=average,normalize=normalize,drot=drot,$
-    xran=xran,yran=yran,fov=fov,center=center,xshifts=xshift,yshifts=yshift,movie=movie
+    average=average, normalize=normalize, drot=drot, roang=roang, reftime=reftime, $
+    xran=xran, yran=yran, fov=fov, center=center, xshifts=xshift, yshifts=yshift, movie=movie, verbose=verbose
 ;+
 ; NAME
 ;   AIA_MAKE_MAPCUBE
@@ -15,7 +15,7 @@ pro aia_make_mapcube,date,timerange,wave=wave,$
 ;   ; AIA 171 partial-sun maps from 2014-11-01 19:00 to 19:20 UT, at a cadence of 120 sec. 
 ;     The field of view is from -300 to 0 in solar X, and from 0 to 300 in solar y. 
 ;     The "movie" keyword is set to make a javascript movie
-;   IDL> aia_make_mapcube,'2014-11-01', ['19:00:00','19:20:00'], wave='171', dt_frm=120.,$
+;   IDL> aia_make_mapcube,['2014-11-01T19:00:00','2014-11-01T19:20:00'], wave='171', dt_frm=120.,$
 ;            xran=[-300,0], yran=[0,300], /movie
 ; OUTPUTS:
 ;   an IDL save file containing the following:
@@ -24,8 +24,7 @@ pro aia_make_mapcube,date,timerange,wave=wave,$
 ;   dur_flgs: an array containing the number of time sequence images; normal exposure, 1, short exposure, 0
 ; INPUTS:
 ;   REQUIRED:
-;       date: date of the observation, e.g., '2012-03-03'
-;       timerange: timerange of the cube, e.g., ['18:00:00','18:30:00']
+;       timerange: timerange of the cube in ssw anytim format, e.g., ['2014-11-01T18:00:00','2014-11-01T18:30:00']
 ;   KEYWORDS (OPTIONAL):
 ;       data_area: 'local': using data stored locally in $LOCAL_DATA_AREA
 ;                  'lan': using data stored on SSXG lan, defined in $AIA_DATA_AREA
@@ -46,6 +45,8 @@ pro aia_make_mapcube,date,timerange,wave=wave,$
 ;       average: average over dt_frm?
 ;       normarlize: normalize exposure to 1 s?
 ;       drot: differentially rotate the map to compensate solar rotation?
+;       roang: angle to rotate the maps (in the sky plane) in degrees, positive is clockwise
+;       reftime: reference time for all maps to be differentially rotated to
 ;       xran: [x0, x1], xrange in solar X, arcsecs
 ;       yran: [y0, y1], yrange in solar Y, arcsecs
 ;       ### not implemented yet ###
@@ -58,16 +59,19 @@ pro aia_make_mapcube,date,timerange,wave=wave,$
 ; HISTORY:
 ;   2015-06-12 - Bin Chen (bin.chen@cfa.harvard.edu) 
 ; 
+if ~exist(timerange) then begin
+    print, 'Please provide an input timerange'
+endif
 if ~exist(data_area) then data_area='local'
 if ~exist(dataset) then dataset='LEV1'
 if keyword_set(fits_dir) then data_area='local'
 if ~exist(wave) then wave='171'
-if ~exist(date) then date='2012-03-03'
-if ~exist(timerange) then timerange=['18:33:00','18:34:00']
 if ~exist(dt_frm) then dt_frm=60.
 if ~exist(dt_data) then dt_data=12.
 if ~exist(xshift) then xshift=0.
 if ~exist(yshift) then yshift=0.
+if ~exist(reftime) then $
+    reftime=anytim(timerange[0],/vms) 
 case wave of
     '171': minexp=1.8 
     '211': minexp=2.7
@@ -85,7 +89,7 @@ case wave of
         end
 endcase
 
-timeran=[date+'T'+timerange[0],date+'T'+timerange[1]]
+timeran=timerange
 ;find how many different dates the time range includes
 t0 = anytim(timeran[0],/utc_ext)
 t0mjd = anytim(timeran[0],/mjd)
@@ -94,10 +98,10 @@ t1mjd = anytim(timeran[1],/mjd)
 nday = t1mjd.mjd - t0mjd.mjd + 1
 datedirs=strarr(nday)
 datestrs=strarr(nday)
-for d = 0, nday-1 do begin
-    tmjd = {MJD:t0mjd.mjd+d, TIME:t0mjd.time}
-    datestrs[d] = anytim(tmjd,/CCSDS,/date_only)
-    datedirs[d] = repstr(datestrs[d],'-','/')+'/'
+for i = 0, nday-1 do begin
+    tmjd = {MJD:t0mjd.mjd+i, TIME:t0mjd.time}
+    datestrs[i] = anytim(tmjd,/CCSDS,/date_only)
+    datedirs[i] = repstr(datestrs[i],'-','/')+'/'
 endfor
 
 navg=fix(dt_frm/dt_data)
@@ -109,15 +113,16 @@ if data_area eq 'local' then begin
     if strlen(getenv('AIA_'+dataset)) eq 0 then $
         box_message,'local AIA data area not defined! Use setenv to define AIA_LEV1, AIA_LEV15 or AIA_CUT' 
     cnta=0
-    for d = 0, nday-1 do begin
-        datedir=datedirs[d]
-        datestr=datestrs[d]
+    for i = 0, nday-1 do begin
+        datedir=datedirs[i]
+        datestr=datestrs[i]
         aiafits_path=getenv('AIA_'+dataset)+datedir
         if keyword_set(fits_dir) then aiafits_path=fits_dir
         ;get file list of AIA images
         if dataset eq 'LEV15' or dataset eq 'DECON' then begin 
             searchstring=aiafits_path+'*'+wave+'.fits'
-            aiaflist[cnta:cnta+cnt-1]=file_search(searchstring,count=cnt)
+            flist=file_search(searchstring,count=cnt)
+            aiaflist[cnta:cnta+cnt-1]=flist
             for m=0,cnt-1 do begin
                 pos=strpos(aiaflist[cnta+m],repstr(datestr,'-',''))+9
                 ftimstr=datestr+'T'+strmid(aiaflist[cnta+m],pos,2)+':'+$
@@ -127,15 +132,19 @@ if data_area eq 'local' then begin
         endif
         if dataset eq 'LEV1' then begin
             searchstring=aiafits_path+'*'+wave+'.image_lev1.fits'
-            aiaflist[cnta:cnta+cnt-1]=file_search(searchstring,count=cnt)
+            flist=file_search(searchstring,count=cnt)
+            aiaflist[cnta:cnta+cnt-1]=flist
             for m=0,cnt-1 do begin
                 pos=strpos(aiaflist[cnta+m],datestr)
-                aiaftim[cnta+m]=anytim(strmid(aiaflist[cnta+m],pos,17))
+                ftimstr=datestr+'T'+strmid(aiaflist[cnta+m],pos+11,2)+':'+$
+                        strmid(aiaflist[cnta+m],pos+13,2)+':'+strmid(aiaflist[cnta+m],pos+15,2)
+                aiaftim[cnta+m]=anytim(ftimstr)
             endfor
         endif
         if dataset eq 'CUT' then begin
             searchstring=aiafits_path+'*'+wave+'*.fts'
-            aiaflist[cnta:cnta+cnt-1]=file_search(searchstring,count=cnt)
+            flist=file_search(searchstring,count=cnt)
+            aiaflist[cnta:cnta+cnt-1]=flist
             for m=0,cnt-1 do begin
                 pos=strpos(aiaflist[cnta+m],repstr(datestr,'-',''))+9
                 ftimstr=datestr+'T'+strmid(aiaflist[cnta+m],pos,2)+':'+$
@@ -143,8 +152,11 @@ if data_area eq 'local' then begin
                 aiaftim[cnta+m]=anytim(ftimstr)
             endfor
         endif
+        cnta += cnt
     endfor
 endif
+aiaflist=aiaflist[0:cnta-1]
+aiaftim=aiaftim[0:cnta-1]
 
 ;if data_area eq 'lan' then begin
 ;    dataset='LEV1'
@@ -184,7 +196,11 @@ for i=0, ntim-1 do begin
         if difft gt 0.8*dt_data then dur_flgs[i]=1
         aiafits=aiaflist[t_ind]
         if dataset eq 'CUT' or dataset eq 'LEV15' then read_sdo, aiafits, oindex, odata, /uncomp_delete
-        if dataset eq 'LEV1' then aia_prep,aiafits,-1,oindex,odata
+        if dataset eq 'LEV1' then begin
+            aia_prep,aiafits,-1,oindex,odata
+            ;read_sdo,aiafits,index,data
+            ;aia_prep,index,data,oindex,odata
+        endif
         durs[i]=oindex.exptime
         if (oindex.exptime lt minexp) then dur_flgs[i]=1
         if exist(normalize) then begin
@@ -196,13 +212,12 @@ for i=0, ntim-1 do begin
         ;DO NOT USE THE DEFAULT TIME FROM INDEX2MAP -- it uses DATE_OBS, which is the starting time of integration
         map_in.time=strtrim(anytim(oindex.t_obs,/vms),2)
         if exist(drot) then begin
-            if i eq 0 then begin
-                ref_dmap=map_in
-                map_in=add_tag(map_in,map_in.time,'rtime')
-            endif else begin
-                map_in=drot_map(map_in,ref_map=ref_dmap)
-            endelse
+            dh = (anytim(reftime)-anytim(map_in.time))/3600.
+            map_in=drot_map(map_in, dh)
         endif
+        if keyword_set(verbose) then $
+            print,'differentially rotating map at current time: '+map_in.time+' to '+map_in.rtime
+        if keyword_set(roang) then map_in = rot_map(map_in, roang, /full_size,rcenter=[0,0]) 
         if exist(xran) or keyword_set(yran) then begin
             if i eq 0 then begin
                 sub_map,map_in,map,xran=xran,yran=yran 
@@ -235,12 +250,13 @@ for i=0, ntim-1 do begin
             ;T_OBS gives the best estimate for AIA time
             ;DO NOT USE THE DEFAULT TIME FROM INDEX2MAP -- it uses DATE_OBS, which is the starting time of integration
             map_in.time=strtrim(anytim(oindex.t_obs,/vms),2)
-            if i eq 0 then begin
-                ref_dmap=map_in
-                map_in=add_tag(map_in,map_in.time,'rtime')
-            endif else begin
-                map_in=drot_map(map_in,ref_map=ref_dmap)
-            endelse
+            if exist(drot) then begin
+                dh = (anytim(reftime)-anytim(map_in.time))/3600.
+                map_in=drot_map(map_in, dh)
+            endif
+            if keyword_set(verbose) then $
+                print,'differentially rotating map at current time: '+map_in.time+' to '+map_in.rtime
+            if keyword_set(roang) then map_in = rot_map(map_in, roang, /full_size,rcenter=[0,0]) 
             if exist(xran) and keyword_set(yran) then begin
                 if i eq 0 then begin
                     sub_map,map_in,map,xran=xran,yran=yran 
@@ -296,8 +312,7 @@ endfor
 tbg=repstr(strmid(anytim(timeran[0],/vms,/time_only),0,8),':','')
 tend=repstr(strmid(anytim(timeran[1],/vms,/time_only),0,8),':','')
 if ~exist(savfile) then begin
-    datestr=repstr(date,'-','')
-    savfile='aiamaps_'+datestr+'_'+tbg+'-'+tend+'.'+strtrim(round(dt_frm),2)+'s.'+wave+'.sav'
+    savfile='aiamaps_'+repstr(datestr,'-','')+'_'+tbg+'-'+tend+'.'+strtrim(round(dt_frm),2)+'s.'+wave+'.sav'
 endif
 save,file=savfile, maps, reftim, durs, dur_flgs
 print,'stored as: '+savfile

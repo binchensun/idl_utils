@@ -69,8 +69,8 @@ case mode of
                         base=reform(intens[tbg_ind_base,*,*],ndist,ncut)
                     endif else begin
                         if sz[0] eq 1 and sz[1] eq 2 then begin ;one dimension array with 2 elements
-                            dt1=min(anytim(tims)-anytim(base_timran[0]),tbg_ind_base,/absolute)
-                            dt2=min(anytim(tims)-anytim(base_timran[1]),tend_ind_base,/absolute)
+                            dt1=min(anytim(tims)-anytim(tbase[0]),tbg_ind_base,/absolute)
+                            dt2=min(anytim(tims)-anytim(tbase[1]),tend_ind_base,/absolute)
                             base=avg(intens[tbg_ind_base:tend_ind_base,*,*],0)
                         endif else begin
                             print,'input tbase not understood...'
