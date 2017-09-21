@@ -215,10 +215,13 @@ for i=0, ntim-1 do begin
             dh = (anytim(reftime)-anytim(map_in.time))/3600.
             map_in=drot_map(map_in, dh)
         endif
-        if keyword_set(verbose) then $
-            print,'differentially rotating map at current time: '+map_in.time+' to '+map_in.rtime
+        if keyword_set(verbose) then begin
+            print,'current map time: '+map_in.time
+            if keyword_set(drot) then $
+                print,'differentially rotating map to '+map_in.rtime
+        endif
         if keyword_set(roang) then map_in = rot_map(map_in, roang, /full_size,rcenter=[0,0]) 
-        if exist(xran) or keyword_set(yran) then begin
+        if keyword_set(xran) or keyword_set(yran) then begin
             if i eq 0 then begin
                 sub_map,map_in,map,xran=xran,yran=yran 
                 ref_smap=map ;use the first map as reference for submap 
@@ -230,6 +233,7 @@ for i=0, ntim-1 do begin
         endelse
         if (i eq 0) then maps=replicate(map,ntim) 
         maps[i]=map
+        if keyword_set(verbose) then print,'saved map time: '+map.time
         reftim[i]=timstr
     endif else begin
         flgsavg=intarr(navg)

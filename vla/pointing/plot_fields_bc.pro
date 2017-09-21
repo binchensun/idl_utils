@@ -92,7 +92,8 @@ if type eq 'helio' then plots,[0,0],[-rsun,rsun],linestyle=1
 for f=0,nfreq-1 do xyouts,0.18,0.92-0.04*f,'FOV at '+string(freq[f],format='(F3.1)')+' GHz = '+$
 	string(2*pbrad[f]/60.,format='(F4.1)')+' arcmin',/norm,align=0,charsize=1.2
 
-xyouts,0.12,0.11,'Sol Center RA DEC File: '+cenfile,/norm,charsize=1.0
+;xyouts,0.12,0.11,'Sol Center RA DEC File: '+cenfile,/norm,charsize=1.0
+xyouts,0.12,0.11,'Pointing reference time: '+anytim(refdate,/vms),/norm,charsize=1.0
 xyouts,0.12,0.11-0.03,'Pointing RA DEC File: '+pntfile,/norm,charsize=1.0
 xyouts,0.12,0.11-0.06,'Time Begin: '+anytim(pos[0].datetime,/vms),/norm,charsize=1.0
 xyouts,0.12,0.11-0.09,'Time End: '+anytim(pos[n_elements(pos)-1].datetime,/vms),/norm,charsize=1.0

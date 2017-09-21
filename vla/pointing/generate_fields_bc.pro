@@ -1,4 +1,5 @@
-pro generate_fields_bc, infile, helio, refdate, refdate_poly,outpos=outpos, notrack=notrack,helcen=helcen
+pro generate_fields_bc, infile, helio, refdate, refdate_poly, outpos=outpos,$ 
+    notrack=notrack,helcen=helcen, outprefix=outprefix, outfile=outfile, outpoly=outpoly
 
 ; read OBSERVER output from Horizons for topo with target=Sun, observer=VLA=-5
 ; extra precision, quantities 1,20, REFRACTION
@@ -20,6 +21,7 @@ IF (n_params(0) LT 3) THEN BEGIN
 end
 
 if ~keyword_set(refdate_poly) then refdate_poly=refdate
+default,outprefix,''
 
 ; generate lat, lon from coord string
 ;if the "helio" input is in heliocentric arcsecs, and keyword 'helcen' is set
@@ -99,8 +101,10 @@ raoff = radecoff[0] & decoff=radecoff[1]
 ;stop
 ;lb_to_radec,refdate,flat[0],flon[0],raoff,decoff
 
+if nfl gt 1 then outfile=strarr(nfl)
 for j=0,nfl-1 do begin      ; loop over fields
-   openw,lun,flds[j]+'_'+repstr(anytim(refdate,/ccsds,/date_only),'-','')+'.radec',/get_lun
+   outf=outprefix+flds[j]+'_'+repstr(anytim(refdate,/ccsds,/date_only),'-','')+'.radec'
+   openw,lun,outf,/get_lun
    printf,lun,'$$SOE'
    for i=0,nl-1 do begin
       if ((abs(pos[i].tt-refsec) lt 5.) or keyword_set(notrack)) then begin
@@ -141,41 +145,42 @@ for j=0,nfl-1 do begin      ; loop over fields
    printf,lun,'$$EOE'
    close,lun
    free_lun,lun
-end
 
-; now generate polynomial coefficients for the EVLA
-; mjd=julday(month_convert(strmid(outpos[0].day,5,3)),fix(strmid(outpos[0].day,9,2)),$
-;           fix(strmid(outpos[0].day,0,4)),fix(strmid(reftime,0,2)),$
-;           fix(strmid(reftime,3,2)),0)-2400000.5d0
-refsec_poly=anytim(refdate_poly)
-mjdstru=anytim(refdate_poly,/mjd)
-mjd=double(mjdstru.mjd)+double(mjdstru.time)/86400000d0
-tt=(outpos.tt-refsec_poly)/86400.d0
-rarad=outpos.radeg/180.0d0*!dpi
-decrad=outpos.decdeg/180.0d0*!dpi
-dist=outpos.delta
-cra=poly_fit(tt,rarad,2)
-cdec=poly_fit(tt,decrad,2)
-cdst=poly_fit(tt,dist,2)
+    ; now generate polynomial coefficients for the EVLA
+    ; mjd=julday(month_convert(strmid(outpos[0].day,5,3)),fix(strmid(outpos[0].day,9,2)),$
+    ;           fix(strmid(outpos[0].day,0,4)),fix(strmid(reftime,0,2)),$
+    ;           fix(strmid(reftime,3,2)),0)-2400000.5d0
+    refsec_poly=anytim(refdate_poly)
+    mjdstru=anytim(refdate_poly,/mjd)
+    mjd=double(mjdstru.mjd)+double(mjdstru.time)/86400000d0
+    tt=(outpos.tt-refsec_poly)/86400.d0
+    rarad=outpos.radeg/180.0d0*!dpi
+    decrad=outpos.decdeg/180.0d0*!dpi
+    dist=outpos.delta
+    cra=poly_fit(tt,rarad,2)
+    cdec=poly_fit(tt,decrad,2)
+    cdst=poly_fit(tt,dist,2)
 
-for j=0,nfl-1 do begin
-openw,lun,flds[j]+'_'+repstr(anytim(refdate,/ccsds,/date_only),'-','')+'.poly',/get_lun
-printf,lun,''
-printf,lun,'rightAscensionPolynomialCoefficients = [ ',string(cra[0],format='(E18.11)'),','
-printf,lun,'                                         ',string(cra[1],format='(E18.11)'),','
-printf,lun,'                                         ',string(cra[2],format='(E18.11)'),' ]'
-printf,lun,'declinationPolynomialCoefficients = [ ',string(cdec[0],format='(E18.11)'),','
-printf,lun,'                                      ',string(cdec[1],format='(E18.11)'),','
-printf,lun,'                                      ',string(cdec[2],format='(E18.11)'),' ]'
-printf,lun,'distancePolynomialCoefficients = [ ',string(cdst[0],format='(E18.11)'),','
-printf,lun,'                                   ',string(cdst[1],format='(E18.11)'),','
-printf,lun,'                                   ',string(cdst[2],format='(E18.11)'),' ]'
-printf,lun,'polynomialModel = PolynomialInterferometerModel('+string(mjd,format='(F16.10)')+','
-printf,lun,'                                      rightAscensionPolynomialCoefficients,'
-printf,lun,'                                      declinationPolynomialCoefficients,'
-printf,lun,'                                      distancePolynomialCoefficients)'
-close,lun
-free_lun,lun
+    outp = outprefix+flds[j]+'_'+repstr(anytim(refdate,/ccsds,/date_only),'-','')+'.poly'
+    openw,lun,outp,/get_lun
+    printf,lun,''
+    printf,lun,'rightAscensionPolynomialCoefficients = [ ',string(cra[0],format='(E18.11)'),','
+    printf,lun,'                                         ',string(cra[1],format='(E18.11)'),','
+    printf,lun,'                                         ',string(cra[2],format='(E18.11)'),' ]'
+    printf,lun,'declinationPolynomialCoefficients = [ ',string(cdec[0],format='(E18.11)'),','
+    printf,lun,'                                      ',string(cdec[1],format='(E18.11)'),','
+    printf,lun,'                                      ',string(cdec[2],format='(E18.11)'),' ]'
+    printf,lun,'distancePolynomialCoefficients = [ ',string(cdst[0],format='(E18.11)'),','
+    printf,lun,'                                   ',string(cdst[1],format='(E18.11)'),','
+    printf,lun,'                                   ',string(cdst[2],format='(E18.11)'),' ]'
+    printf,lun,'polynomialModel = PolynomialInterferometerModel('+string(mjd,format='(F16.10)')+','
+    printf,lun,'                                      rightAscensionPolynomialCoefficients,'
+    printf,lun,'                                      declinationPolynomialCoefficients,'
+    printf,lun,'                                      distancePolynomialCoefficients)'
+    close,lun
+    free_lun,lun
+    if nfl gt 1 then outfile[j]=outf else outfile=outf 
+    if nfl gt 1 then outpoly[j]=outp else outpoly=outp 
 endfor
 
 end
