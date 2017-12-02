@@ -34,6 +34,7 @@ if ~keyword_set(dminmax) then begin
     if wave eq '94' then dminmax=10.^[-0.5,2.5]
     if wave eq '335' then dminmax=10.^[-0.5,2.5]
     if wave eq '304'  then dminmax=10.^[0.5,4.]
+    if wave eq 'fe18' or wave eq 'Fe XVIII' then dminmax=10.^[-0.5,2.5]
 endif
 if ~keyword_set(ratio) then ratio=0
 if ~keyword_set(rminmax) then begin
@@ -42,8 +43,14 @@ if ~keyword_set(rminmax) then begin
         else rminmax=[0.3,3.]
 endif
 if ~keyword_set(dstep) then dstep=1
-ind=strpos(mapcube,'.sav')
-if ~keyword_set(savfile) then savfile=strmid(mapcube,0,ind)+'.spsav'
+if ~keyword_set(savfile) then begin
+    if isa(mapcube,'String') then begin 
+        ind=strpos(mapcube,'.sav')
+        savfile=strmid(mapcube,0,ind)+'.spsav'
+    endif else begin
+        savfile='tmp.spsav'
+    endelse
+endif
 if ~keyword_set(cutwidth) then cutwidth=5.
 if ~keyword_set(cutang) then cutang=0.*!dtor ;angular width of individual cut, in rad
 if ~keyword_set(dopoly) and ~keyword_set(dospline) then begin
@@ -51,7 +58,8 @@ if ~keyword_set(dopoly) and ~keyword_set(dospline) then begin
 endif
 ;prep mapcube to the designated timerange and xyrange
 if exist(mapcube) then begin
-    restore,mapcube 
+    if isa(mapcube,'Anonymous') then maps=mapcube
+    if isa(mapcube,'String') then restore,mapcube 
 endif else begin
     print,'Input map cube does not exist!'
     return
@@ -91,13 +99,13 @@ if keyword_set(cutsav) and ~keyword_set(drawcut) then begin
     fov=[0.06,0.08,0.97,0.97]
     asp=(float(sz[2])*dy)/(float(sz[1])*dx)
     pos=bclayout([3,2],fov=fov,asp=asp,xgap=0.08,ygap=0.05)
-    aia_lct,wave=wave,/load
+    if wave ne 'Fe XVIII' then aia_lct,wave=wave,/load else loadct,5,/silent
     nmap=n_elements(maps)
     mapinds=indgen(6)*(nmap-1)/5
     for i=0,5 do begin
         map=maps[mapinds[i]]
         plot_map,map,dmin=dminmax[0],dmax=dminmax[1],$
-            /log,position=pos[*,i],title=map.id+' @ '+map.time
+            log=log,position=pos[*,i],title=map.id+' @ '+map.time
         if keyword_set(refxy) then begin
             sz=size(refxy)
             if sz[0] eq 1 and sz[1] eq 2 then plots,refxy[0],refxy[1],symsize=3,psym=4,color=255
@@ -132,7 +140,7 @@ if keyword_set(drawcut) then begin
     loadct,3
     for i=0,5 do begin
         map=maps[mapinds[i]]
-        plot_map,map,dmin=dminmax[0],dmax=dminmax[1],/log,position=pos[*,i],title=map.id+' @ '+map.time
+        plot_map,map,dmin=dminmax[0],dmax=dminmax[1],log=log,position=pos[*,i],title=map.id+' @ '+map.time
         if keyword_set(refxy) then begin
             sz=size(refxy)
             if sz[0] eq 1 and sz[1] eq 2 then plots,refxy[0],refxy[1],symsize=3,psym=4,color=255
@@ -147,7 +155,7 @@ if keyword_set(drawcut) then begin
         dt=min(anytim(maps.time)-anytim(timplt),t_ind,/abs)
     mapplt=maps[t_ind]
     window,0,xs=800,ys=800
-    plot_map,mapplt,dmin=dminmax[0],dmax=dminmax[1],title=map.id+' @ '+map.time
+    plot_map,mapplt,dmin=dminmax[0],dmax=dminmax[1],title=map.id+' @ '+map.time,log=log
     if keyword_set(refxy) then begin
         sz=size(refxy)
         if sz[0] eq 1 and sz[1] eq 2 then plots,refxy[0],refxy[1],symsize=3,psym=4,color=255
@@ -167,7 +175,7 @@ if keyword_set(drawcut) then begin
             wset,0
             !p.multi=0
             loadct,3
-            plot_map,mapplt,dmin=dminmax[0],dmax=dminmax[1],/log,title=mapplt.id+' @ '+mapplt.time
+            plot_map,mapplt,dmin=dminmax[0],dmax=dminmax[1],log=log,title=mapplt.id+' @ '+mapplt.time
             if keyword_set(refxy) then begin
                 sz=size(refxy)
                 if sz[0] eq 1 and sz[1] eq 2 then plots,refxy[0],refxy[1],symsize=3,psym=4,color=255
@@ -215,7 +223,7 @@ if keyword_set(drawcut) then begin
             for i=0,5 do begin
                 map=maps[mapinds[i]]
                 plot_map,map,dmin=dminmax[0],dmax=dminmax[1],$
-                    /log,position=pos[*,i],title=map.id+' @ '+map.time
+                    log=log,position=pos[*,i],title=map.id+' @ '+map.time
                 cgplots,xs_[0:n],ys_[0:n],psym=1,symsize=2.0,thick=2,/data,color='white'
                 if n ge 2 then cgplot,xfits,yfits,linesty=0,thick=1,color='white',/overplot
                 if keyword_set(refxy) then begin
@@ -233,7 +241,7 @@ if keyword_set(drawcut) then begin
         wset,0
         !p.multi=0
         loadct,3
-        plot_map,mapplt,dmin=dminmax[0],dmax=dminmax[1],/log,title=mapplt.id+' @ '+mapplt.time
+        plot_map,mapplt,dmin=dminmax[0],dmax=dminmax[1],log=log,title=mapplt.id+' @ '+mapplt.time
         if keyword_set(refxy) then begin
             sz=size(refxy)
             if sz[0] eq 1 and sz[1] eq 2 then plots,refxy[0],refxy[1],symsize=3,psym=4,color=255
@@ -283,7 +291,7 @@ if keyword_set(drawcut) then begin
     endelse
     wset,0
     !p.multi=0
-    plot_map,mapplt,dmin=dminmax[0],dmax=dminmax[1],/log,title=mapplt.id+' @ '+mapplt.time
+    plot_map,mapplt,dmin=dminmax[0],dmax=dminmax[1],log=log,title=mapplt.id+' @ '+mapplt.time
     if keyword_set(refxy) then begin
         sz=size(refxy)
         if sz[0] eq 1 and sz[1] eq 2 then plots,refxy[0],refxy[1],symsize=3,psym=4,color=255
@@ -337,7 +345,7 @@ if keyword_set(drawcut) then begin
     for i=0,5 do begin
         map=maps[mapinds[i]]
         plot_map,map,dmin=dminmax[0],dmax=dminmax[1],$
-            /log,position=pos[*,i],title=map.id+' @ '+map.time
+            log=log,position=pos[*,i],title=map.id+' @ '+map.time
         cgplot,xs,ys,linesty=0,thick=1,/data,color='white',/overplot
         cgplot,xs0,ys0,linesty=2,thick=1,color='white',/overplot
         cgplot,xs1,ys1,linesty=2,thick=1,color='white',/overplot
@@ -349,8 +357,14 @@ if keyword_set(drawcut) then begin
             endif
         endif
     endfor
-    ind=strpos(mapcube,'.sav')
-    if ~keyword_set(cutsav) then cutsav=strmid(mapcube,0,ind)+'.cutsav'
+    if ~keyword_set(cutsav) then begin
+        if isa(mapcube,'String') then begin
+            ind=strpos(mapcube,'.sav')
+            cutsav=strmid(mapcube,0,ind)+'.cutsav'
+        endif else begin
+            cutsav='tmp.cutsav'
+        endelse
+    endif
     save,file=cutsav,dists,xs,xs0,xs1,ys,ys0,ys1,cutwidths,posangs,posang2s,ncut
 end
 
@@ -365,6 +379,7 @@ if nt le 0 then begin
     return
 endif
 tims=tims[ldur_ts]
+timstr=anytim(tims,/ccsds)
 ncut=1
 intens=fltarr(nt,ndist,ncut)
 intens_sd=fltarr(nt,ndist,ncut)
@@ -432,12 +447,17 @@ if ncut eq 1 then begin
     intens_sd=reform(intens_sd,nt,ndist,1)
     npixs=reform(npixs,nt,ndist,1)
 endif
-save,file=savfile,intens,intens_sd,npixs,tims,dists,xs,xs0,xs1,ys,ys0,ys1,cutwidths,posangs,posang2s,ncut   
+save,file=savfile,intens,intens_sd,npixs,tims,timstr,dists,xs,xs0,xs1,ys,ys0,ys1,cutwidths,posangs,posang2s,ncut   
 if keyword_set(domovie) then begin
     if ~keyword_set(moviepath) then moviepath='./'
     ;make intensity movie
     nmap=n_elements(maps)
-    aia_lct,r,g,b,wave=wave,/load
+    if wave ne 'Fe XVIII' then begin
+        aia_lct,r,g,b,wave=wave,/load
+    endif else begin
+        loadct,5
+        tvlct,r,g,b,/get
+    endelse
     print,strtrim(string(nmap),2)+' images to process...' 
     for i=0,nmap-1 do begin
         set_plot,'z'
@@ -473,7 +493,7 @@ if keyword_set(domovie) then begin
         endif
         if ~keyword_set(rdiff) and ~keyword_set(bdiff) then begin
             map=maps[i]
-            plot_map,map,/log,dmin=dminmax[0],dmax=dminmax[1],_extra=ex,title=map.id+' @ '+map.time
+            plot_map,map,log=log,dmin=dminmax[0],dmax=dminmax[1],_extra=ex,title=map.id+' @ '+map.time
         endif
         if keyword_set(refxy) then begin
             sz=size(refxy)
@@ -535,7 +555,8 @@ if keyword_set(domovie) then begin
     cd,cur
 endif else begin
     window,2,xs=800,ys=1000
-    aia_lct,wave=wave,/load
+    ;if wave ne 'Fe XVIII' then aia_lct,wave=wave,/load else loadct,5,/silent
+    loadct,39
     cgerase
     !p.multi=[0,1,3]
     tbase=[maps[0].time,maps[5].time]
