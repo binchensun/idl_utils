@@ -224,9 +224,10 @@ for i=0, ntim-1 do begin
         if keyword_set(xran) or keyword_set(yran) then begin
             if i eq 0 then begin
                 sub_map,map_in,map,xran=xran,yran=yran 
-                ref_smap=map ;use the first map as reference for submap 
+                ;ref_smap=map ;use the first map as reference for submap 
             endif else begin
-                sub_map,map_in,map,ref_map=ref_smap,/preserve ;make sure pixels are the same at the first map 
+                ;sub_map,map_in,map,ref_map=ref_smap,/preserve ;make sure pixels are the same at the first map 
+                sub_map,map_in,map,xran=xran,yran=yran 
             endelse
         endif else begin
             map=temporary(map_in)
@@ -264,9 +265,10 @@ for i=0, ntim-1 do begin
             if exist(xran) and keyword_set(yran) then begin
                 if i eq 0 then begin
                     sub_map,map_in,map,xran=xran,yran=yran 
-                    ref_smap=map ;use the first map as reference for submap 
+                    ;ref_smap=map ;use the first map as reference for submap 
                 endif else begin
-                    sub_map,map_in,map,ref_map=ref_smap,/preserve ;make sure pixels are the same at the first map 
+                    ;sub_map,map_in,map,ref_map=ref_smap,/preserve ;make sure pixels are the same at the first map 
+                    sub_map,map_in,map,xran=xran,yran=yran 
                 endelse
             endif else begin
                 map=temporary(map_in)
@@ -282,6 +284,7 @@ for i=0, ntim-1 do begin
         maps[i]=avgmap
         reftim[i]=timstr
     endelse
+    ;do sub_map again to ensure that the map cube has the same dimension
     if exist(movie) then begin
         case wave of
             '171': sclpar={min:10.,max:10000.}
@@ -308,6 +311,8 @@ for i=0, ntim-1 do begin
         write_png,'aia_'+wave+'_movie_'+repstr(strmid(anytim(maps[i].time,/vms,/time_only),0,8),':','')+'.png',tvrd(/true)
     endif
 endfor
+maps_=temporary(maps)
+sub_map,maps_,maps,xran=xran,yran=yran
 
 ;shift the map centers according to xshift and yshift, if needed
 for i=0,ntim-1 do begin

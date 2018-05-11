@@ -57,11 +57,12 @@ case 1 of
             return
         endelse
 
-        add_prop, map, id = 'VLA ' + index.object
+        add_prop, map, id = index.telescop 
         add_prop, map, freq = freq
         add_prop, map, frequnit = 'GHz' 
         add_prop, map, stokes = stokes
         map.roll_angle=0.
+        map.id = index.telescop + ' ' + stokes + ' ' + strtrim(string(freq,format='(f6.3)'),2) + ' GHz' 
     end
 
     n_dim eq 3: begin
@@ -99,7 +100,7 @@ case 1 of
                        dx     = ind.cdelt1, $
                        dy     = ind.cdelt2, $
                        time   = anytim(time,/vms), $
-                       id     = ind.telescop + ' ' + ind.object, $
+                       id     = index.telescop + ' ' + stokes + ' ' + strtrim(string(freq,format='(f6.3)'),2) + ' GHz',$ 
                        dur    = ind.exptime, $
                        freq  = freq , $
                        frequnit = 'GHz', $
@@ -157,7 +158,7 @@ case 1 of
                            dx     = ind.cdelt1, $
                            dy     = ind.cdelt2, $
                            time   = anytim(time,/vms), $
-                           id     = ind.telescop + ' ' + ind.object, $
+                           id     = ind.telescop + ' ' + stokes + ' '+ strtrim(string(freq,format='(f6.3)'),2) + ' GHz' , $
                            dur    = ind.exptime, $
                            freq  = freq , $
                            frequnit = 'GHz', $
@@ -219,7 +220,7 @@ case 1 of
                                dx     = ind.cdelt1, $
                                dy     = ind.cdelt2, $
                                time   = anytim(time,/vms), $
-                               id     = ind.telescop + ' ' + ind.object, $
+                               id     = ind.telescop + ' ' + stokes + ' '+ strtrim(string(freq,format='(f6.3)'),2) + ' GHz' , $
                                dur    = ind.exptime, $
                                freq  = freq , $
                                frequnit = 'GHz', $

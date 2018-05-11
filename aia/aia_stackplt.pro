@@ -1,6 +1,6 @@
 pro aia_stackplt,mapcube,wave=wave,drawcut=drawcut,cutsav=cutsav,savfile=savfile,$
     cutwidth=cutwidth,cutang=cutang,dopoly=dopoly,dospline=dospline,$
-    dminmax=dminmax,sat_lvl=sat_lvl,domovie=domovie,moviepath=moviepath,$
+    dminmax=dminmax,dropshort=dropshort,sat_lvl=sat_lvl,domovie=domovie,moviepath=moviepath,$
     xrange=xrange,yrange=yrange,timerange=timerange,xysize=xysize,refxy=refxy,$
     rdiff=rdiff,ratio=ratio,rminmax=rminmax,dstep=dstep,$
     bdiff=bdiff,tbase=tbase,bminmax=bminmax,log=log,dosmooth=dosmooth
@@ -17,6 +17,7 @@ pro aia_stackplt,mapcube,wave=wave,drawcut=drawcut,cutsav=cutsav,savfile=savfile
 ;        cutwidth: width of individual cut for average
 ;        cutang: if nonzero, width of the cut increases in the cut direction
 ;        dminmax: scaling of the AIA image, in logarithm scale
+;        dropshort: drop short exposures? 0 no, 1 yes. Default no
 ;        sat_lvl: above this value consider pixel saturated and don't use (default 1.5e4)
 ;        refxy: reference location in solar x and y (arcsecs), can be a 2-element array (x, y), or a n x 2 array with n reference points
 ;optimum values for displaying movie
@@ -371,14 +372,19 @@ end
 ndist=n_elements(dists)
 tims=anytim(maps.time)
 ntim=n_elements(tims)
+nt=ntim
+
 if ~exist(dur_flgs) then dur_flgs=intarr(ntim)
-ldur_ts=where(dur_flgs eq 0, nt) ;plot only normal exposure frames
-if ~exist(durs) then durs=intarr(ntim)
-if nt le 0 then begin
-    box_message,'No time frames with normal exposures'
-    return
+if keyword_set(dropshort) then begin
+    ldur_ts=where(dur_flgs eq 0, nt) ;plot only normal exposure frames
+    if ~exist(durs) then durs=intarr(ntim)
+    if nt le 0 then begin
+        box_message,'No time frames with normal exposures'
+        return
+    endif
+    tims=tims[ldur_ts]
+    maps=maps[ldur_ts]
 endif
-tims=tims[ldur_ts]
 timstr=anytim(tims,/ccsds)
 ncut=1
 intens=fltarr(nt,ndist,ncut)
@@ -393,7 +399,7 @@ for n=0,ncut-1 do begin
     print,'=====cut ',n, ' to process====='
     for i=0, nt-1 do begin
         if (i mod 50) eq 0 then print, 'Processing',i,' out of ',nt, ' times...'
-        map=maps[ldur_ts[i]]
+        map=maps[i]
         dur=durs[i]
         mapdata=map.data
         ;calculate xaxis and yaxis
@@ -447,7 +453,7 @@ if ncut eq 1 then begin
     intens_sd=reform(intens_sd,nt,ndist,1)
     npixs=reform(npixs,nt,ndist,1)
 endif
-save,file=savfile,intens,intens_sd,npixs,tims,timstr,dists,xs,xs0,xs1,ys,ys0,ys1,cutwidths,posangs,posang2s,ncut   
+save,file=savfile,intens,intens_sd,npixs,tims,timstr,dists,xs,xs0,xs1,ys,ys0,ys1,cutwidths,posangs,posang2s,ncut,dur_flgs   
 if keyword_set(domovie) then begin
     if ~keyword_set(moviepath) then moviepath='./'
     ;make intensity movie
