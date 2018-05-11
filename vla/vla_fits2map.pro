@@ -39,10 +39,18 @@ case 1 of
     n_dim eq 2: begin
         index2map, index, data, map
         ;determine the frequency axis
-        if (tag_exist(index,'crval3') and index.ctype3 eq 'FREQ') then $ 
-            freq=index.crval3/1e9
-        if (tag_exist(index,'crval4') and index.ctype4 eq 'FREQ') then $ 
-            freq=index.crval4/1e9
+        if (tag_exist(index,'crval3') and index.ctype3 eq 'FREQ') then begin 
+            if tag_exist(index,'cunit3') and index.cunit3 eq 'Hz' then begin
+                freq=index.crval3/1e9
+                frequnit='GHz'
+            endif
+        endif
+        if (tag_exist(index,'crval4') and index.ctype4 eq 'FREQ') then begin
+            if tag_exist(index,'cunit4') and index.cunit4 eq 'Hz' then begin
+                freq=index.crval4/1e9
+                frequnit='GHz'
+            endif
+        endif
         ;determine the stokes axis
         if (tag_exist(index,'crval3') and index.ctype3 eq 'STOKES') then $
             stokesnum=index.crval3
@@ -62,16 +70,24 @@ case 1 of
         add_prop, map, frequnit = 'GHz' 
         add_prop, map, stokes = stokes
         map.roll_angle=0.
-        map.id = index.telescop + ' ' + stokes + ' ' + strtrim(string(freq,format='(f6.3)'),2) + ' GHz' 
+        map.id = index.telescop + ' ' + stokes + ' ' + strtrim(string(freq,format='(f6.3)'),2) + ' '+frequnit 
     end
 
     n_dim eq 3: begin
         ; determine the frequency axis
         index0=index[0]
-        if (tag_exist(index0,'crval3') and index0.ctype3 eq 'FREQ') then $ 
-            freqs=index0.crval3/1e9+findgen(index0.naxis3)*index0.cdelt3/1e9
-        if (tag_exist(index0,'crval4') and index0.ctype4 eq 'FREQ') then $ 
-            freqs=index0.crval4/1e9+findgen(index0.naxis4)*index0.cdelt4/1e9
+        if (tag_exist(index0,'crval3') and index0.ctype3 eq 'FREQ') then begin 
+            if tag_exist(index0,'cunit3') and index.cunit3 eq 'Hz' then begin
+                freqs=index0.crval3/1e9+findgen(index0.naxis3)*index0.cdelt3/1e9
+                frequnit='GHz'
+            endif
+        endif
+        if (tag_exist(index0,'crval4') and index0.ctype4 eq 'FREQ') then begin 
+            if tag_exist(index0,'cunit4') and index.cunit4 eq 'Hz' then begin
+                freqs=index0.crval4/1e9+findgen(index0.naxis4)*index0.cdelt4/1e9
+                frequnit='GHz'
+            endif
+        endif
         nfreqs = n_elements(freqs)
         ; determine the time axis
         time = index0.date_obs
@@ -100,7 +116,7 @@ case 1 of
                        dx     = ind.cdelt1, $
                        dy     = ind.cdelt2, $
                        time   = anytim(time,/vms), $
-                       id     = index.telescop + ' ' + stokes + ' ' + strtrim(string(freq,format='(f6.3)'),2) + ' GHz',$ 
+                       id     = index.telescop + ' ' + stokes + ' ' + strtrim(string(freq,format='(f6.3)'),2) + frequnit,$ 
                        dur    = ind.exptime, $
                        freq  = freq , $
                        frequnit = 'GHz', $
@@ -119,10 +135,18 @@ case 1 of
     n_dim eq 4: begin ;the third and fourth axes are frequency and stokes 
         ; determine the frequency axis
         index0=index[0,0]
-        if (tag_exist(index0,'crval3') and index0.ctype3 eq 'FREQ') then $ 
-            freqs=index0.crval3/1e9+findgen(index0.naxis3)*index0.cdelt3/1e9
-        if (tag_exist(index0,'crval4') and index0.ctype4 eq 'FREQ') then $ 
-            freqs=index0.crval4/1e9+findgen(index0.naxis4)*index0.cdelt4/1e9
+        if (tag_exist(index0,'crval3') and index0.ctype3 eq 'FREQ') then begin 
+            if tag_exist(index0,'cunit3') and index.cunit3 eq 'Hz' then begin
+                freqs=index0.crval3/1e9+findgen(index0.naxis3)*index0.cdelt3/1e9
+                frequnit='GHz'
+            endif
+        endif
+        if (tag_exist(index0,'crval4') and index0.ctype4 eq 'FREQ') then begin 
+            if tag_exist(index0,'cunit4') and index.cunit4 eq 'Hz' then begin
+                freqs=index0.crval4/1e9+findgen(index0.naxis4)*index0.cdelt4/1e9
+                frequnit='GHz'
+            endif
+        endif
         nfreqs = n_elements(freqs)
         ; determine the time axis
         time = index[0,0].date_obs
@@ -158,10 +182,10 @@ case 1 of
                            dx     = ind.cdelt1, $
                            dy     = ind.cdelt2, $
                            time   = anytim(time,/vms), $
-                           id     = ind.telescop + ' ' + stokes + ' '+ strtrim(string(freq,format='(f6.3)'),2) + ' GHz' , $
+                           id     = ind.telescop + ' ' + stokes + ' '+ strtrim(string(freq,format='(f6.3)'),2) + frequnit , $
                            dur    = ind.exptime, $
                            freq  = freq , $
-                           frequnit = 'GHz', $
+                           frequnit = frequnit, $
                            xunits = 'arcsec', $
                            yunits = 'arcsec',$
                            stokes = stokes)
@@ -177,10 +201,18 @@ case 1 of
     n_dim eq 5: begin ;the 3rd, 4th, and 5th axes are frequency, stokes, and time 
         ; determine the frequency axis
         index0=index[0,0,0]
-        if (tag_exist(index0,'crval3') and index0.ctype3 eq 'FREQ') then $ 
-            freqs=index0.crval3/1e9+findgen(index0.naxis3)*index0.cdelt3/1e9
-        if (tag_exist(index[0,0],'crval4') and index0.ctype4 eq 'FREQ') then $ 
-            freqs=index0.crval4/1e9+findgen(index0.naxis4)*index0.cdelt4/1e9
+        if (tag_exist(index0,'crval3') and index0.ctype3 eq 'FREQ') then begin 
+            if tag_exist(index0,'cunit3') and index.cunit3 eq 'Hz' then begin
+                freqs=index0.crval3/1e9+findgen(index0.naxis3)*index0.cdelt3/1e9
+                frequnit='GHz'
+            endif
+        endif
+        if (tag_exist(index0,'crval4') and index0.ctype4 eq 'FREQ') then begin 
+            if tag_exist(index0,'cunit4') and index.cunit4 eq 'Hz' then begin
+                freqs=index0.crval4/1e9+findgen(index0.naxis4)*index0.cdelt4/1e9
+                frequnit='GHz'
+            endif
+        endif
         nfreqs = n_elements(freqs)
         ; determine the time axis
         times = reform(index[0,0,*].date_obs)
@@ -220,7 +252,7 @@ case 1 of
                                dx     = ind.cdelt1, $
                                dy     = ind.cdelt2, $
                                time   = anytim(time,/vms), $
-                               id     = ind.telescop + ' ' + stokes + ' '+ strtrim(string(freq,format='(f6.3)'),2) + ' GHz' , $
+                               id     = ind.telescop + ' ' + stokes + ' '+ strtrim(string(freq,format='(f6.3)'),2) + frequnit , $
                                dur    = ind.exptime, $
                                freq  = freq , $
                                frequnit = 'GHz', $
