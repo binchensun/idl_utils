@@ -3,7 +3,7 @@ pro aia_stackplt,mapcube,wave=wave,drawcut=drawcut,cutsav=cutsav,savfile=savfile
     dminmax=dminmax,dropshort=dropshort,sat_lvl=sat_lvl,domovie=domovie,moviepath=moviepath,$
     xrange=xrange,yrange=yrange,timerange=timerange,xysize=xysize,refxy=refxy,$
     rdiff=rdiff,ratio=ratio,rminmax=rminmax,dstep=dstep,$
-    bdiff=bdiff,tbase=tbase,bminmax=bminmax,log=log,dosmooth=dosmooth
+    bdiff=bdiff,tbase=tbase,bminmax=bminmax,log=log,dosmooth=dosmooth,doplot=doplot
 ;1. Set up two ends of each slit
 ;2. Divide the length of the slit into n distance steps
 ;3. At each distance point, draw a line perpendicular to the slit, and average along the line
@@ -66,6 +66,7 @@ endif else begin
     return
 endelse
 nmap=n_elements(maps)
+if ~exist(durs) then durs=intarr(nmap)
 ;determine timerange to plot
 timsecs=anytim(maps.time)
 timeran=dblarr(2)
@@ -560,24 +561,26 @@ if keyword_set(domovie) then begin
     jsmovie,jsmovie_name,images
     cd,cur
 endif else begin
-    window,2,xs=800,ys=1000
-    ;if wave ne 'Fe XVIII' then aia_lct,wave=wave,/load else loadct,5,/silent
-    loadct,39
-    cgerase
-    !p.multi=[0,1,3]
-    tbase=[maps[0].time,maps[5].time]
-    bminmax=[0.1,10.]
-    spectro_plot,bytscl(alog10(intens),min=alog10(dminmax[0]),max=alog10(dminmax[1])),tims,dists,$
-        ytit='Distance along cut (arcsec)',/xsty,/ysty
-    t_dist_rescale_aia, intens, tims, dists, mode='base',$
-        tbase=tbase, bminmax=bminmax, bintensplt=bintensplt,b_lim=b_lim,/b_log,$
-        /smooth,smthsz=[1,2,1]
-    spectro_plot,bytscl(bintensplt,min=b_lim[0],max=b_lim[1]),tims,dists,$
-        ytit='Distance along cut (arcsec)',/xsty,/ysty
-    t_dist_rescale_aia, intens, tims, dists, mode='run', dstep=3,$
-            /ratio,rintensplt=rintensplt, rminmax=[0.5,2],r_lim=r_lim,/smooth,smthsz=[1,2,1]
-    spectro_plot,bytscl(rintensplt,min=r_lim[0],max=r_lim[1]),tims,dists,$
-        ytit='Distance along cut (arcsec)',/xsty,/ysty
-    !p.multi=0
+    if keyword_set(doplot) then begin
+        window,2,xs=800,ys=1000
+        ;if wave ne 'Fe XVIII' then aia_lct,wave=wave,/load else loadct,5,/silent
+        loadct,39
+        cgerase
+        !p.multi=[0,1,3]
+        tbase=[maps[0].time,maps[5].time]
+        bminmax=[0.1,10.]
+        spectro_plot,bytscl(alog10(intens),min=alog10(dminmax[0]),max=alog10(dminmax[1])),tims,dists,$
+            ytit='Distance along cut (arcsec)',/xsty,/ysty
+        t_dist_rescale_aia, intens, tims, dists, mode='base',$
+            tbase=tbase, bminmax=bminmax, bintensplt=bintensplt,b_lim=b_lim,/b_log,$
+            /smooth,smthsz=[1,2,1]
+        spectro_plot,bytscl(bintensplt,min=b_lim[0],max=b_lim[1]),tims,dists,$
+            ytit='Distance along cut (arcsec)',/xsty,/ysty
+        t_dist_rescale_aia, intens, tims, dists, mode='run', dstep=3,$
+                /ratio,rintensplt=rintensplt, rminmax=[0.5,2],r_lim=r_lim,/smooth,smthsz=[1,2,1]
+        spectro_plot,bytscl(rintensplt,min=r_lim[0],max=r_lim[1]),tims,dists,$
+            ytit='Distance along cut (arcsec)',/xsty,/ysty
+        !p.multi=0
+    endif
 endelse
 end
