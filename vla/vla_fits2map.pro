@@ -22,8 +22,8 @@
 ;
 ; History     : Written by Bin Chen (bin.chen@njit.edu) based on hsi_fits2map.pro by P. T. Gallagher
 ;
-; Modifications:
-;           16-Feb-2016, Bin Chen - set roll_angle to zero for two-dimensional maps. Otherwise it takes -p_angle 
+;               16-Feb-2016, Bin Chen - set roll_angle to zero for two-dimensional maps. Otherwise it takes -p_angle 
+;               19-May-2019, Bin Chen - added additional keywords to the map structure
 ;
 ; Contact     : bin.chen@njit.edu
 ;-
@@ -69,6 +69,14 @@ case 1 of
         add_prop, map, freq = freq
         add_prop, map, frequnit = 'GHz' 
         add_prop, map, stokes = stokes
+        add_prop, map, bunit = index.bunit 
+        add_prop, map, btype = index.btype 
+        add_prop, map, bmaj = index.bmaj
+        add_prop, map, bmin = index.bmin
+        add_prop, map, rsun = index.rsun_obs
+        add_prop, map, l0 = HGLN_OBS
+        add_prop, map, b0 = HGLT_OBS
+        add_prop, map, comment = 'Converted by VLA_FITS2MAP.PRO'
         map.roll_angle=0.
         map.id = index.telescop + ' ' + stokes + ' ' + strtrim(string(freq,format='(f6.3)'),2) + ' '+frequnit 
     end
