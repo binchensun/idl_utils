@@ -98,6 +98,9 @@
 ;            pos=bclayout([3,2], fov=[0.1,0.1,0.9,0.9],xgap=0.02,ygap=0.02]
 ;            It returns a 4 x 6 array, the first is for col=1, row=1, the second is for 
 ;            col=2, row=1, the third is for col=3, row=1, the third is for col=1, row=2, and so on
+;   History:
+;       Originally from cgLayout.pro (http://www.idlcoyote.com/idldoc/cg/cglayout.html)
+;       Bin Chen modified the routine
 FUNCTION bcLayout, layout, $
    ASPECT=aspect, $
    IXMARGIN=ixMargin, $
