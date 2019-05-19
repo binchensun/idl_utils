@@ -1,10 +1,10 @@
 ;+
-; Name: vla_readfits
+; Name: casa_readfits
 ; 
-; Purpose: Read image data from a VLA fits file from CASA output (via vla_prep.py)
+; Purpose: Read image data from a fits file from CASA output (after helioimage2fits.py)
 ;
 ; Calling sequence:
-;   vla_readfits, fitsfiles, index, [data, /silent, /quiet]
+;   casa_readfits, fitsfiles, index, [data, /silent, /quiet]
 ; 
 ; Restrictions:
 ;   if the input is multiple fits files, they should have the same dimensions. 
@@ -14,7 +14,13 @@
 ;   DATA: 3-d to 5-d data array -- x, y, [freq, pol, time]
 ;   INDEX: 1-d to 3-d structure array -- [freq, pol, time]
 ; 
-pro vla_readfits, files0, index, data, $
+; History     : Written by Bin Chen (bin.chen@njit.edu) based on hsi_readfits.pro by P. T. Gallagher
+;               Originally called vla_readfits.pro
+;
+;               19-May-2019, Bin Chen - renamed to casa_readfits.pro
+;
+; Contact     : bin.chen@njit.edu
+pro casa_readfits, files0, index, data, $
     silent=silent, quiet=quiet, nodata=nodata, $
     outsize=outsize,strtemplate=strtemplate,$
     nocomment=nocomment,nohistory=nohistory

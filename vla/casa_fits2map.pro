@@ -37,7 +37,7 @@
 ;
 ; Contact     : bin.chen@njit.edu
 ;-
-pro calc_rms, map, rmsxran=rmsxran, rmsyran=rmsyran, snr=snr
+function calc_rms, map, rmsxran=rmsxran, rmsyran=rmsyran, snr=snr
 ; calculate rms and snr of a given map. Only one dimensional map is accepted
     if keyword_set(rmsxran) or keyword_set(rmsyran) then begin
         if not keyword_set(rmsxran) then rmsxran=get_map_xrange(map[0])
@@ -47,12 +47,14 @@ pro calc_rms, map, rmsxran=rmsxran, rmsyran=rmsyran, snr=snr
         ; use entire map
         smap = map
     endelse
-    rms = sqrt((moment(smap.data,/nan)[1])
+    ;select only pixels smaller than 20% of the maximum
+    idx = where(smap.data lt 0.2*max(map.data,/nan))
+    rms = sqrt((moment(smap.data[idx],/nan))[1])
     snr = max(map.data,/nan)/rms
-    return rms
+    return, rms
 end
 
-pro casa_fits2map, files, map, calcrms=calcrms, rmsxran=rmsxran, rmsyran=rmsyran
+pro casa_fits2map, files, maps, calcrms=calcrms, rmsxran=rmsxran, rmsyran=rmsyran
 
 casa_readfits,files,index,data,/silent
 n_dim = size( data, /n_dim )
@@ -93,10 +95,11 @@ case 1 of
         add_prop, map, freq = freq
         add_prop, map, frequnit = 'GHz' 
         add_prop, map, stokes = stokes
-        add_prop, map, bunit = index.bunit 
+        add_prop, map, dataunit = index.bunit 
         add_prop, map, btype = index.btype 
         add_prop, map, bmaj = index.bmaj
         add_prop, map, bmin = index.bmin
+        add_prop, map, bpa = index.bpa
         add_prop, map, rsun = index.rsun_obs
         add_prop, map, l0 = index.HGLN_OBS
         add_prop, map, b0 = index.HGLT_OBS
@@ -107,9 +110,10 @@ case 1 of
             add_prop, map, rms = rms
             add_prop, map, snr = snr
             add_prop, map, rmsunit = index.bunit
-            add_prop, map, rmsxran = index.rmsxran
-            add_prop, map, rmsyran = index.rmsyran
+            add_prop, map, rmsxran = rmsxran
+            add_prop, map, rmsyran = rmsyran
         endif
+        maps = map
     end
 
     n_dim eq 3: begin
@@ -163,21 +167,22 @@ case 1 of
                        yunits = 'arcsec', $
                        roll_angle = 0., $
                        stokes = stokes)
-                add_prop, map, bunit = index.bunit 
-                add_prop, map, btype = index.btype 
-                add_prop, map, bmaj = index.bmaj
-                add_prop, map, bmin = index.bmin
-                add_prop, map, rsun = index.rsun_obs
-                add_prop, map, l0 = index.HGLN_OBS
-                add_prop, map, b0 = index.HGLT_OBS
+                add_prop, map, dataunit = ind.bunit 
+                add_prop, map, btype = ind.btype 
+                add_prop, map, bmaj = ind.bmaj
+                add_prop, map, bmin = ind.bmin
+                add_prop, map, bpa = ind.bpa
+                add_prop, map, rsun = ind.rsun_obs
+                add_prop, map, l0 = ind.HGLN_OBS
+                add_prop, map, b0 = ind.HGLT_OBS
                 add_prop, map, comment = 'Converted by VLA_FITS2MAP.PRO'
                 if keyword_set(calcrms) then begin
                     rms = calc_rms(map, rmsxran=rmsxran, rmsyran=rmsyran, snr=snr)
                     add_prop, map, rms = rms
                     add_prop, map, snr = snr
-                    add_prop, map, rmsunit = index.bunit
-                    add_prop, map, rmsxran = index.rmsxran
-                    add_prop, map, rmsyran = index.rmsyran
+                    add_prop, map, rmsunit = ind.bunit
+                    add_prop, map, rmsxran = rmsxran
+                    add_prop, map, rmsyran = rmsyran
                 endif
 
              if ( i eq 0 )  then begin
@@ -246,21 +251,22 @@ case 1 of
                            yunits = 'arcsec',$
                            roll_angle = 0., $
                            stokes = stokes)
-                add_prop, map, bunit = index.bunit 
-                add_prop, map, btype = index.btype 
-                add_prop, map, bmaj = index.bmaj
-                add_prop, map, bmin = index.bmin
-                add_prop, map, rsun = index.rsun_obs
-                add_prop, map, l0 = index.HGLN_OBS
-                add_prop, map, b0 = index.HGLT_OBS
+                add_prop, map, dataunit = ind.bunit 
+                add_prop, map, btype = ind.btype 
+                add_prop, map, bmaj = ind.bmaj
+                add_prop, map, bmin = ind.bmin
+                add_prop, map, bpa = ind.bpa
+                add_prop, map, rsun = ind.rsun_obs
+                add_prop, map, l0 = ind.HGLN_OBS
+                add_prop, map, b0 = ind.HGLT_OBS
                 add_prop, map, comment = 'Converted by VLA_FITS2MAP.PRO'
                 if keyword_set(calcrms) then begin
                     rms = calc_rms(map, rmsxran=rmsxran, rmsyran=rmsyran, snr=snr)
                     add_prop, map, rms = rms
                     add_prop, map, snr = snr
-                    add_prop, map, rmsunit = index.bunit
-                    add_prop, map, rmsxran = index.rmsxran
-                    add_prop, map, rmsyran = index.rmsyran
+                    add_prop, map, rmsunit = ind.bunit
+                    add_prop, map, rmsxran = rmsxran
+                    add_prop, map, rmsyran = rmsyran
                 endif
                  if ( i eq 0 and j eq 0)  then begin
                     maps = replicate(map, nfreqs, nstokes)
@@ -275,13 +281,13 @@ case 1 of
         ; determine the frequency axis
         index0=index[0,0,0]
         if (tag_exist(index0,'crval3') and index0.ctype3 eq 'FREQ') then begin 
-            if tag_exist(index0,'cunit3') and index.cunit3 eq 'Hz' then begin
+            if tag_exist(index0,'cunit3') and index0.cunit3 eq 'Hz' then begin
                 freqs=index0.crval3/1e9+findgen(index0.naxis3)*index0.cdelt3/1e9
                 frequnit='GHz'
             endif
         endif
         if (tag_exist(index0,'crval4') and index0.ctype4 eq 'FREQ') then begin 
-            if tag_exist(index0,'cunit4') and index.cunit4 eq 'Hz' then begin
+            if tag_exist(index0,'cunit4') and index0.cunit4 eq 'Hz' then begin
                 freqs=index0.crval4/1e9+findgen(index0.naxis4)*index0.cdelt4/1e9
                 frequnit='GHz'
             endif
@@ -333,21 +339,22 @@ case 1 of
                                yunits = 'arcsec',$
                                roll_angle = 0., $
                                stokes = stokes)
-                    add_prop, map, bunit = index.bunit 
-                    add_prop, map, btype = index.btype 
-                    add_prop, map, bmaj = index.bmaj
-                    add_prop, map, bmin = index.bmin
-                    add_prop, map, rsun = index.rsun_obs
-                    add_prop, map, l0 = index.HGLN_OBS
-                    add_prop, map, b0 = index.HGLT_OBS
+                    add_prop, map, dataunit = ind.bunit 
+                    add_prop, map, btype = ind.btype 
+                    add_prop, map, bmaj = ind.bmaj
+                    add_prop, map, bmin = ind.bmin
+                    add_prop, map, bpa = ind.bpa
+                    add_prop, map, rsun = ind.rsun_obs
+                    add_prop, map, l0 = ind.HGLN_OBS
+                    add_prop, map, b0 = ind.HGLT_OBS
                     add_prop, map, comment = 'Converted by VLA_FITS2MAP.PRO'
                     if keyword_set(calcrms) then begin
                         rms = calc_rms(map, rmsxran=rmsxran, rmsyran=rmsyran, snr=snr)
                         add_prop, map, rms = rms
                         add_prop, map, snr = snr
-                        add_prop, map, rmsunit = index.bunit
-                        add_prop, map, rmsxran = index.rmsxran
-                        add_prop, map, rmsyran = index.rmsyran
+                        add_prop, map, rmsunit = ind.bunit
+                        add_prop, map, rmsxran = rmsxran
+                        add_prop, map, rmsyran = rmsyran
                     endif
                      if ( i eq 0 and j eq 0 and k eq 0)  then begin
                         maps = replicate(map, nfreqs, nstokes, ntimes)
