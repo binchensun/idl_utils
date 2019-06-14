@@ -104,9 +104,9 @@ case 1 of
         add_prop, map, bmaj = index.bmaj
         add_prop, map, bmin = index.bmin
         add_prop, map, bpa = index.bpa
-        add_prop, map, rsun = index.rsun_obs
-        add_prop, map, l0 = index.HGLN_OBS
-        add_prop, map, b0 = index.HGLT_OBS
+        if tag_exist(index,'rsun_obs') then add_prop, map, rsun = index.rsun_obs
+        if tag_exist(index,'hgln_obs') then add_prop, map, l0 = index.hgln_OBS
+        if tag_exist(index,'hglt_obs') then add_prop, map, b0 = index.hglt_OBS
         add_prop, map, comment = 'Converted by CASA_FITS2MAP.PRO'
         map.roll_angle=0.
         if keyword_set(calcrms) then begin
@@ -177,9 +177,9 @@ case 1 of
                 add_prop, map, bmaj = ind.bmaj
                 add_prop, map, bmin = ind.bmin
                 add_prop, map, bpa = ind.bpa
-                add_prop, map, rsun = ind.rsun_obs
-                add_prop, map, l0 = ind.HGLN_OBS
-                add_prop, map, b0 = ind.HGLT_OBS
+                if tag_exist(index,'rsun_obs') then add_prop, map, rsun = index.rsun_obs
+                if tag_exist(index,'hgln_obs') then add_prop, map, l0 = index.hgln_OBS
+                if tag_exist(index,'hglt_obs') then add_prop, map, b0 = index.hglt_OBS
                 add_prop, map, comment = 'Converted by CASA_FITS2MAP.PRO'
                 if keyword_set(calcrms) then begin
                     rms = calc_rms(map, rmsxran=rmsxran, rmsyran=rmsyran, snr=snr)
@@ -262,9 +262,9 @@ case 1 of
                 add_prop, map, bmaj = ind.bmaj
                 add_prop, map, bmin = ind.bmin
                 add_prop, map, bpa = ind.bpa
-                add_prop, map, rsun = ind.rsun_obs
-                add_prop, map, l0 = ind.HGLN_OBS
-                add_prop, map, b0 = ind.HGLT_OBS
+                if tag_exist(index,'rsun_obs') then add_prop, map, rsun = index.rsun_obs
+                if tag_exist(index,'hgln_obs') then add_prop, map, l0 = index.hgln_OBS
+                if tag_exist(index,'hglt_obs') then add_prop, map, b0 = index.hglt_OBS
                 add_prop, map, comment = 'Converted by CASA_FITS2MAP.PRO'
                 if keyword_set(calcrms) then begin
                     rms = calc_rms(map, rmsxran=rmsxran, rmsyran=rmsyran, snr=snr)
@@ -351,9 +351,9 @@ case 1 of
                     add_prop, map, bmaj = ind.bmaj
                     add_prop, map, bmin = ind.bmin
                     add_prop, map, bpa = ind.bpa
-                    add_prop, map, rsun = ind.rsun_obs
-                    add_prop, map, l0 = ind.HGLN_OBS
-                    add_prop, map, b0 = ind.HGLT_OBS
+                    if tag_exist(index,'rsun_obs') then add_prop, map, rsun = index.rsun_obs
+                    if tag_exist(index,'hgln_obs') then add_prop, map, l0 = index.hgln_OBS
+                    if tag_exist(index,'hglt_obs') then add_prop, map, b0 = index.hglt_OBS
                     add_prop, map, comment = 'Converted by CASA_FITS2MAP.PRO'
                     if keyword_set(calcrms) then begin
                         rms = calc_rms(map, rmsxran=rmsxran, rmsyran=rmsyran, snr=snr)
