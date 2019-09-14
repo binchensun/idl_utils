@@ -34,6 +34,7 @@
 ;               19-May-2019, Bin Chen - added additional keywords to the map structure, and renamed to casa_fits2map.pro
 ;                               * calcrms: whether or not to calculate rms, which uses rmsxran and rmsyran
 ;                               * and a function to calculate rms
+;               14-Sep-2019, Bin Chen - modified calc_rms to fix issue if selected region has no pixel with flux < 0.1*max 
 ;
 ; Contact     : bin.chen@njit.edu
 ;-
@@ -51,8 +52,14 @@ function calc_rms, map, rmsxran=rmsxran, rmsyran=rmsyran, snr=snr
         smap = map
     endelse
     ;select only pixels smaller than 10% of the maximum
-    idx = where(smap.data lt 0.1*max(map.data,/nan))
-    rms = sqrt((moment(smap.data[idx],/nan))[1])
+    idx = where(smap.data lt 0.1*max(map.data,/nan), npix)
+    if npix ge 5 then begin
+        rms = sqrt((moment(smap.data[idx],/nan))[1])
+    endif else begin
+        print, 'Warning: Selected rms region has less than 5 pixels with <10% max flux'
+        print, 'Check your image quality or region selection'
+        print, 'Now I am using all the pixels for rms...' 
+        rms = sqrt((moment(smap.data,/nan))[1])
     snr = max(map.data,/nan)/rms
     return, rms
 end

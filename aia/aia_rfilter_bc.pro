@@ -26,7 +26,7 @@ case wavelnth of
        gammacor: 0.6} 
   '211': scalepar={ $
        min:0.0, $ 
-       max:15220.0, $ 
+       max:3000.0, $ 
        exp:2.7, $
        gamma: 1.025, $ 
        a: 100.0, $
@@ -60,15 +60,15 @@ case wavelnth of
        corscl: 3.0, $
        gammacor: 1.0}            
   '193': scalepar={ $
-       min:35.0, $ 
-       max:18000.0, $ 
+       min:100.0, $ 
+       max:5000.0, $ 
        exp:1.8, $ 
        gamma: 1.05, $
        a: 100.0, $
        scl:2.99950, $
        mincor: 0.00, $
        maxcor: 1.05, $
-       corscl: 4.5, $
+       corscl: 3.5, $
        gammacor: 0.6}    
   '304': scalepar={ $
        min:0.25, $ 
@@ -723,7 +723,8 @@ for kk = 0D, loop_len, nsum*cadence do begin
       if idx[0] eq -1 then begin 
         if n_elements(choke) eq 0 then choke=k 
       endif else begin
-        ring_avg[k] = total(dataSUM[masking[idx]]) / n_elements(idx)
+        ;ring_avg[k] = total(dataSUM[masking[idx]]) / n_elements(idx)
+        ring_avg[k] = median(dataSUM[masking[idx]]) 
         ring_min[k] = min(dataSUM[masking[idx]])
       endelse
     endfor 
@@ -774,16 +775,44 @@ for kk = 0D, loop_len, nsum*cadence do begin
 	    for b=0, n_elements(coef)-1 do fit = fit + coef[b]*arad^b
     
 	    max_fit = (10.^fit)*scalepar.corscl
-                               
-    endif else begin
+    endif
+    if wv eq '211' then begin
+    	avg_min = avg(ring_min[0:choke-1] >1e-6) ;used for scaling up the lowest mins
+    	ring_min = alog10(temporary(ring_min[0:choke-1]) >avg_min/10.)
+    	coefdummy = svdfit(arad[0:choke-1],ring_min,5,yfit=yfit) ;polynomial fit accross mins
+        ;idx_ = where(abs(ring_min - alog10(avg_min/10.)) le 0.01)
+        ;yfit[idx_] = ring_min[idx_]
+    	min_fit  = 10.^yfit
+        ;maximum
+        high = fix(nring*0.48)
+        low = fix(nring*0.03)
+        ring_min2 = alog10(ring_min >1e-6)
+        fity = ring_min2
+        increment = (fity[high]/3.7725703) / (n_elements(fity[high:*]) -1)
+        ring_avg2 = alog10(ring_avg > 1e-6)
+        fity = ring_avg2
+    	fity[high:*] = fity[high] - indgen(n_elements(fity[high:*]))*increment
+    	fity[0:low] = fity[low] + reverse(indgen(n_elements(fity[0:low]))*increment*5)
+    	fitx = arad
+    	coef = svdfit(fitx,fity,5,yfit=yfit)
+    	diff = abs((fity - yfit)/yfit)
+        keep = where(diff le 0.05 and fity gt -5.5)
+        coef = svdfit(fitx[keep],fity[keep],7)
+        fit = fltarr(n_elements(arad))
+        for b=0, n_elements(coef)-1 do fit = fit + coef[b]*arad^b
+        max_fit = (10.^fit)*scalepar.corscl
+    endif
+    if wv eq '335' or wv eq '131' or wv eq '94' then begin
         
     	avg_min = avg(ring_min[0:choke-1] >1e-6) ;used for scaling up the lowest mins
-    	ring_min = alog10(temporary(ring_min[0:choke-1]) >avg_min/10)
+    	ring_min = alog10(temporary(ring_min[0:choke-1]) >avg_min/10.)
     	coefdummy = svdfit(arad[0:choke-1],ring_min,5,yfit=yfit) ;polynomial fit accross mins
+        ;idx_ = where(abs(ring_min - alog10(avg_min/10.)) le 0.01)
+        ;yfit[idx_] = ring_min[idx_]
     	min_fit  = 10.^yfit
     	max_fit  = ring_avg*scalepar.corscl ;increase corscl to decrease corona brightness
     
-  	endelse  
+    endif
     
     ;Store pamaeters for later use if requested
     if keyword_set(create_sav) then begin 
@@ -798,8 +827,8 @@ for kk = 0D, loop_len, nsum*cadence do begin
   ;bytescales disk component
   
   if keyword_set(rundiff) then img = fltarr(4096,4096) else img = bytscl(alog(scalepar.a*(temporary(img)/scalepar.max) + 1.0)/alog(scalepar.a), $
-     	                   												min=alog(scalepar.a*(scalepar.min/scalepar.max) + 1.0)/alog(scalepar.a),  $
-     	                   												max=alog(scalepar.a*(scalepar.max/scalepar.max) + 1.0)/alog(scalepar.a), /nan)
+                                                                    min=alog(scalepar.a*(scalepar.min/scalepar.max) + 1.0)/alog(scalepar.a),  $
+                                                                    max=alog(scalepar.a*(scalepar.max/scalepar.max) + 1.0)/alog(scalepar.a), /nan)
   ;img = bytscl(alog(temporary(img))^gamma_disk, min=mnmx[2], max=mnmx[3])
   if keyword_set(components) then disk = img
   ;renormalizes, bytescales, and overlays the fancified coronal component
