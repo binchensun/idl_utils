@@ -60,6 +60,7 @@ function calc_rms, map, rmsxran=rmsxran, rmsyran=rmsyran, snr=snr
         print, 'Check your image quality or region selection'
         print, 'Now I am using all the pixels for rms...' 
         rms = sqrt((moment(smap.data,/nan))[1])
+    endelse
     snr = max(map.data,/nan)/rms
     return, rms
 end
